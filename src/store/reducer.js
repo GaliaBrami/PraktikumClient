@@ -15,7 +15,12 @@ const reducer = (state = initalseState, action) => {
         case actions.SET_WORKER:
             return { ...state, worker: action.worker }
         case action.DELETE_WORKER:
-            return {...state,workers:state.workers.map(w=>w.id!=action.worker.id)}    
+            return {...state,workers:state.workers.map(w=>w.id!=action.worker.id)}  
+        case action.EDIT_WORKER:
+            const workers = [...state.workers];
+            const findIndex = workers.findIndex(x => x.idd === action.worker.id);
+            workers[findIndex] = action.worker;
+            return { ...state, workers }
         // case actions.SET_RECIPE:
         //     return { ...state, recipes: action.recipes}
         // case actions.SET_CATEGORIES:

@@ -15,16 +15,16 @@ import { useDispatch, useSelector } from 'react-redux';
 const schema = yup
   .object({
     firstName: yup.string().required(),
-    lastName: yup.number().required(),
+    lastName: yup.string().required(),
     identity: yup.string().required(),
-    startDate: yup.number().positive().integer().required(),
-    dateOfBirth: yup.number().positive().required(),
+    startDate: yup.date().required(),
+    dateOfBirth: yup.date().required(),
     gender:yup.number().required(),
     roles: yup.array().of(
       yup.object().shape({
         Name: yup.string().required(),
         isNanager: yup.number().positive(),
-        startDate: yup.string().required(),
+        startDate: yup.date().required(),
       })
     ),
     // roles: yup.array().of(yup.object().required()),
@@ -49,7 +49,7 @@ const WorkerForm = () => {
   })
   useEffect(() => {
 
-    axios.get("https://localhost:7170/api/Roles")
+    axios.get("https://localhost:7259/api/Roles")
       .then(info => {
         console.log(info.data, "daratatrtra")
         // dispatch({ type: action.SET_WORKERS, workers: info.data })
@@ -66,13 +66,13 @@ const WorkerForm = () => {
     dispatch({ type: action.SET_WORKER, worker: null })
     navigate("/workerList");
   }
-  const onSubmit = (data) => {
+  const onSubmit1 = (data) => {
 
     // data.UserId = user.Id;
 
     if (workerRedux) {
       // dispatch({ type: action.EDIT_WORKER, worker: data })
-      axios.put("https://localhost:7170/api/Worker", data) 
+      axios.put("https://localhost:7259/api/Worker", data) 
       .then(x => {
           dispatch({ type: action.EDIT_WORKER, worker: x.data })
           alert("worker edited succesfully");
@@ -81,7 +81,7 @@ const WorkerForm = () => {
       .catch(err => console.log(err))
     }else{
     // {dispatch({ type: action.ADD_, worker: data })
-      axios.post("https://localhost:7170/api/Worker", data)
+      axios.post("https://localhost:7259/api/Worker", data)
       .then(x => {
           dispatch({ type: action.ADD_WORKER, recipe: x.data })
           alert("worker added succesfully")
@@ -104,7 +104,7 @@ const WorkerForm = () => {
   return (
     <div className="worker-form-container">
       <h2 className="form-heading">{workerRedux ? 'Edit Worker' : 'Add Worker'}</h2>
-      <form className='ui form' onSubmit={handleSubmit(onSubmit)}>
+      <form className='ui form' onSubmit={handleSubmit(onSubmit1)}>
         <div className="form-row">
           <label>First Name:</label>
           <input type="text" name="firstName" {...register("firstName")} //onChange={this.handleInputChange}
@@ -178,13 +178,14 @@ const WorkerForm = () => {
                 </>
             ))}
             <button class="ui button" onClick={() => appendInstructions('')}> add Instruction</button> */}
-            </div>
-      </form>
-      <div className="form-buttons">
-        <input className="save-button ui button" type="submit" value="Save"></input> 
+            </div><br></br>
+            <div className="form-buttons">
+        <input className="save-button ui button" type="submit"  value="Save"></input> 
         {/* <input class=""  /> */}
-         <button className="cancel-button" onClick={cancle}>Cancel jhfjhghkj</button>
+         <button className="cancel-button" onClick={cancle}>Cancle</button>
       </div>
+      </form>
+      
     </div>
   );
 
