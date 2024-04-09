@@ -5,39 +5,40 @@ import axios from 'axios';
 import { useFieldArray, useForm } from 'react-hook-form';
 import { yupResolver } from "@hookform/resolvers/yup"
 import * as yup from "yup"
-// import { useDispatch, useSelector } from "react-redux";
-import {  useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import * as action from "../store/action"
 import { useDispatch, useSelector } from 'react-redux';
 
-// const roles = [{ id: 0, value: "principal" }, { id: 1, value: "teacher" }, { id: 2, value: "supervisor" },{ id: 3, value: "secretery" }];
-
 const schema = yup
   .object({
-    firstName: yup.string().required(),
-    lastName: yup.string().required(),
-    identity: yup.string().required(),
-    startDate: yup.date().required(),
-    dateOfBirth: yup.date().required(),
-    gender:yup.number().required(),
+    firstName: yup.string().required().min(2),
+    lastName: yup.string().required().min(2),
+    identity: yup.string().required().min(9).max(9,"id has 9 digits!"),
+    startDate: yup.date().required().min(yup.ref('birthDate')),
+    birthDate: yup.date().required(),
+    gender: yup.number().required(),
+    status: yup.number(),
     roles: yup.array().of(
       yup.object().shape({
-        Name: yup.string().required(),
-        isNanager: yup.number().positive(),
-        startDate: yup.date().required(),
+        id: yup.number(),
+        name: yup.object().shape({
+          id: yup.number(),
+          name: yup.string()
+        }),
+        isManager: yup.boolean(),
+        startDate: yup.date().min(yup.ref('startDate')),
       })
     ),
-    // roles: yup.array().of(yup.object().required()),
   })
   .required()
-;
+  ;
 
 const WorkerForm = () => {
   const workerRedux = useSelector(x => x.worker)
   const [worker, setWorker] = useState(null);
   const [roles, setRoles] = useState([]);
-  const navigate=useNavigate();
-  const dispatch=useDispatch();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const {
     register,
@@ -45,74 +46,83 @@ const WorkerForm = () => {
     formState: { errors }, control
   } = useForm({
     resolver: yupResolver(schema),
-    values: worker,
+    values: {
+      // id: workerRedux?.id,
+      identity: workerRedux?.identity,
+      firstName: workerRedux?.firstName,
+      lastName: workerRedux?.lastName,
+      birthDate: workerRedux?.birthDate?.split('T')[0],
+      startDate: workerRedux?.startDate?.split('T')[0],
+      gender: workerRedux?.gender,
+      roles: workerRedux?.roles ? workerRedux.roles.map(role => ({
+        id:role.id,
+        name: { id: role.name.id || "", name: role.name.name },
+        isManager: role.isManager,
+        startDate: role.startDate?.split('T')[0],
+      })) : []
+    },
   })
   useEffect(() => {
 
     axios.get("https://localhost:7259/api/Roles")
       .then(info => {
         console.log(info.data, "daratatrtra")
-        // dispatch({ type: action.SET_WORKERS, workers: info.data })
-        // setWorkers(info.data)
-        // console.log(workers)
         setRoles(info.data);
-        // setRoles(["teacher","principal"]);
-
       })
       .catch(err => console.log(err));
   }, []);
 
-  const cancle=()=>{
+  const cancle = () => {
     dispatch({ type: action.SET_WORKER, worker: null })
     navigate("/workerList");
   }
   const onSubmit1 = (data) => {
-
-    // data.UserId = user.Id;
-
+    console.log(data)
+    if (data.roles)
+    data.roles.map(r => { r.id = 0; r.name.id = 0 });
+    // data.status = true;
+    // data.id = 0;
+    console.log(data)
     if (workerRedux) {
-      // dispatch({ type: action.EDIT_WORKER, worker: data })
-      axios.put("https://localhost:7259/api/Worker", data) 
-      .then(x => {
+      axios.put(`https://localhost:7259/api/Worker/${workerRedux.id}`, {data})
+        .then(x => {
           dispatch({ type: action.EDIT_WORKER, worker: x.data })
           alert("worker edited succesfully");
-          navigator('/homepage');
-      })
-      .catch(err => console.log(err))
-    }else{
-    // {dispatch({ type: action.ADD_, worker: data })
+          navigator('/workerList');
+        })
+        .catch(err => console.log(err))
+    } else {
       axios.post("https://localhost:7259/api/Worker", data)
-      .then(x => {
+        .then(x => {
           dispatch({ type: action.ADD_WORKER, recipe: x.data })
           alert("worker added succesfully")
-          navigate('/homepage');
-      })
-      .catch(err => console.log(err))}
+          navigate('/workerList');
+        })
+        .catch(err => console.log(err))
+    }
   }
-  
+
   const { fields: fieldsRoles, append: append, remove: remove, } = useFieldArray({
     control,
     name: "roles",
   });
-  // const { fields: fieldsInstructions, append: appendInstructions, remove: removevInstructions, } = useFieldArray({
-  //   control,
-  //   name: "roles",
-  // });
 
+  return (<>
+  <button onClick={() => {
+          dispatch({ type: action.SET_WORKER, worker: null });
+          navigate("/addRole")}}> Add Role</button>
 
-  
-  return (
     <div className="worker-form-container">
       <h2 className="form-heading">{workerRedux ? 'Edit Worker' : 'Add Worker'}</h2>
       <form className='ui form' onSubmit={handleSubmit(onSubmit1)}>
         <div className="form-row">
           <label>First Name:</label>
           <input type="text" name="firstName" {...register("firstName")} //onChange={this.handleInputChange}
-           />
+          />
         </div>
         <div className="form-row">
           <label>Last Name:</label>
-          <input type="text" name="lastName" {...register("lastName")}  />
+          <input type="text" name="lastName" {...register("lastName")} />
         </div>
         <div className="form-row">
           <label>Identity:</label>
@@ -124,7 +134,7 @@ const WorkerForm = () => {
         </div>
         <div className="form-row">
           <label>Date of Birth:</label>
-          <input type="date" name="dateOfBirth" {...register("dateOfBirth")}  />
+          <input type="date" name="birthDate" {...register("birthDate")} />
         </div>
         <div className="form-row">
           <label>Gender:</label>
@@ -133,62 +143,63 @@ const WorkerForm = () => {
             <option value={0}>Male</option>
             <option value={1}>Female</option>
           </select> <hr></hr>
-          </div>
+        </div>
         <div className="form-row">
-       
-        {fieldsRoles.map((field, index) => (
-                <div className="ui grid">
-                    <label>Role Name:</label>
-                    <div className="four wide column">
-                    <select name="isManager" {...register(`roles.${index}.name`)} >
-                        <option value="">Select Role Name</option>
-                        {roles.map((r,index)=>(
-                          <option value={r.name}>{r.name}</option>
-                        ))}
 
-                    </select>
-                        {/* <input {...register()} placeholder="isManager" type="select" /> */}
-                        <p>{errors.roles?.[index]?.b?.message}</p>
-                    </div>
-                    <div className="four wide column">
+          {fieldsRoles.map((field, index) => (
+            <div className="ui grid">
+              <label>Role Name:</label>
+              <div className="four wide column">
+                <select name="isManager" {...register(`roles.${index}.name.name`)} >
+                  <option value="">Select Role Name</option>
+                  {roles.map((r, index) => (
+                    <option value={r.name}>{r.name}</option>
+                  ))}
+
+                </select>
+              </div>
+              <div className="four wide column">
                       <label for="cM">Manager</label>
-                        <input type='checkbox' id="cM" name='cM' {...register(`roles.${index}.isManager`)} value="isManager" />
+                        <input type='checkbox' id="cM" name='cM' {...register(`roles.${index}.isManager`)} value="true" />
                         <p>{errors.roles?.[index]?.a?.message}</p>
                     </div>
-                    <div className="four wide column">
-                      <label>Start Working Date:</label>
-                        <input {...register(`roles.${index}.Type`)} placeholder="startDate" type='date' />
-                        <p>{errors.roles?.[index]?.c?.message}</p>
-                    
-                    </div><div className="four wide column">
-                    <button className="ui button" onClick={() => remove(index)}> delete</button>
-                    </div><hr />
+              {/* <div className="four wide column">
+                <label htmlFor={`isManager-${index}`}>Manager</label>
+                <input
+                  type="checkbox"
+                  id={`isManager-${index}`}
+                  name={`roles.${index}.isManager`}
+                  {...register(`roles.${index}.isManager`)}
+                  value="true"
+                />
+                <input
+                  type="hidden"
+                  value="false"
+                  {...register(`roles.${index}.isManager`)}
+                />
+                <p>{errors.roles?.[index]?.isManager?.message}</p>
+              </div> */}
+              <div className="four wide column">
+                <label>Start Working Date:</label>
+                <input {...register(`roles.${index}.startDate`)} placeholder="startDate" type='date' />
+                <p>{errors.roles?.[index]?.c?.message}</p>
 
-                </div>
-            ))}
-            <button class="ui button" onClick={() => append({})}> add Role</button><br /><br />
-            {/* {fieldsInstructions.map((field, index) => (
-                <>
-
-                    <input {...register(`Instructions.${index}`)} placeholder="instruction" />
-                    <p>{errors.Instructions?.[index]?.a?.message}</p>
-                    <button class="ui button" onClick={() => removevInstructions(index)}> delete</button>
-                    <hr />
-
-                </>
-            ))}
-            <button class="ui button" onClick={() => appendInstructions('')}> add Instruction</button> */}
-            </div><br></br>
-            <div className="form-buttons">
-        <input className="save-button ui button" type="submit"  value="Save"></input> 
-        {/* <input class=""  /> */}
-         <button className="cancel-button" onClick={cancle}>Cancle</button>
-      </div>
+              </div><div className="four wide column">
+                <button type='button' className="ui button" onClick={() => remove(index)}> delete</button>
+              </div><hr />
+            </div>
+          ))}
+          <button type="button" class="ui button" onClick={() => append({})}> add Role</button><br /><br />
+        </div><br></br>
+        <div className="form-buttons">
+          <input className="save-button ui button" type="submit" value="Save"></input>
+          <button className="cancel-button" onClick={cancle}>Cancle</button>
+        </div>
       </form>
-      
-    </div>
+
+    </div></>
   );
 
-         }   
+}
 
 export default WorkerForm;

@@ -15,6 +15,10 @@
 // export const SET_CATEGORIES = `SET_CATEGORIES`;
 // export const ADD_CATEGORY = `ADD_CATEGORY`;
 export const SET_WORKERS = `SET_WORKERS`;
+export const SET_W_TO_SHOW = `SET_W_TO_SHOW`;
+export const SET_PASSWORD = `SET_PASSWORD`;
+export const SET_ROLES = `SET_ROLES`;
+export const ADD_ROLE = `ADD_ROLE`;
 export const SET_WORKER = `SET_WORKER`;
 export const DELETE_WORKER = `DELETE_WORKER`;
 export const ADD_WORKER = `ADD_WORKER`;

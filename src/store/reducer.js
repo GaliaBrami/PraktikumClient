@@ -1,17 +1,27 @@
 import * as actions from './action'
 
 const initalseState = {
-    // user: null,
+    password: null,
     workers: [],
     Worker: null,
+    workerToShow:null,
     // shoplist:[],
-    // roles: [""]
+    roles: []
 }
 
 const reducer = (state = initalseState, action) => {
     switch (action.type) {
         case actions.SET_WORKERS:
             return { ...state, workers: action.workers }
+        case actions.SET_ROLES:
+            return { ...state, roles: action.r }
+        case actions.SET_PASSWORD:
+            return { ...state, password: action.password }
+            
+        case actions.ADD_ROLE:
+            const rols = [...state.roles];
+            rols.push(action.r);
+            return { ...state, rols }
         case actions.SET_WORKER:
             return { ...state, worker: action.worker }
         case action.DELETE_WORKER:
@@ -21,8 +31,8 @@ const reducer = (state = initalseState, action) => {
             const findIndex = workers.findIndex(x => x.idd === action.worker.id);
             workers[findIndex] = action.worker;
             return { ...state, workers }
-        // case actions.SET_RECIPE:
-        //     return { ...state, recipes: action.recipes}
+        case actions.SET_W_TO_SHOW:
+            return { ...state, workerToShow: action.w}
         // case actions.SET_CATEGORIES:
         //     return { ...state, categories: action.ctgrs}
         // case actions.SET_SHP_LST:
