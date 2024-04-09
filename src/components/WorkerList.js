@@ -34,7 +34,7 @@ const WorkerList = () => {
 const [filterRole, setFilterRole] = useState('');
 const [filterName, setFilterName] = useState('');
 const [filterIdentity, setFilterIdentity] = useState('');
-const [filterIsManager, setFilterIsManager] = useState('');
+// const [filterIsManager, setFilterIsManager] = useState('');
 
 useEffect(() => {
   setActiveWorkers(workers.filter(worker => worker.status));
@@ -54,13 +54,13 @@ useEffect(() => {
     if (filterIdentity) {
       match = match && worker.identity.toLowerCase().includes(filterIdentity.toLowerCase());
     }
-    if (filterIsManager !== '') {
-      match = match && worker.roles.some(r=>r.isManager === filterIsManager);
-    }
+    // if (filterIsManager !== '') {
+    //   match = match && worker.roles.some(r=>r.isManager === filterIsManager);
+    // }
     return match;
   });
   setFilteredWorkers(filtered);
-}, [activeWorkers, filterRole, filterName, filterIdentity, filterIsManager]);
+}, [activeWorkers, filterRole, filterName, filterIdentity]);
 //=========================================================
   useEffect(() => {
 
@@ -79,6 +79,13 @@ useEffect(() => {
         setRoles(info.data);
         if(info.data.length==0)
           navigator("/addRole")
+        const uniqueRoles=[];
+        roles.forEach(role => {
+          if (!uniqueRoles.some(r => r.name === role.name)) {
+              uniqueRoles.push(role);
+          }
+          setRoles(uniqueRoles)
+      });
       })
       .catch(err => console.log(err));
  
@@ -118,7 +125,7 @@ const exportToExcel = () => { // Pass workers as a parameter
   const worksheet = workbook.addWorksheet('Sheet 1');
   const headers = [ 'First Name', 'Last Name', 'Identity', 'Start Date'];
   worksheet.addRow(headers)
-  const rows = formatDatatoExcel(workers);
+  const rows = formatDatatoExcel(activeWorkers);
   console.log(rows);
   rows.forEach(i=>{
     worksheet.addRow(Object.values(i))
@@ -142,11 +149,11 @@ const exportToExcel = () => { // Pass workers as a parameter
                 ))}
             {/* Render options for roles */}
           </select>
-          <select value={filterIsManager} onChange={e => setFilterIsManager(e.target.value)}>
+          {/* <select value={filterIsManager} onChange={e => setFilterIsManager(e.target.value)}>
             <option value="">Filter by manager</option>
             <option value={true}>Yes</option>
             <option value={false}>No</option>
-          </select>
+          </select> */}
         </div>
       <div class="ui list">
         {/* <select class="ui dropdown" name="selectByRole" defaultValue="selectByRole" onChange={(e) => {setRoleToSearch(e.target.value);}}>
@@ -207,7 +214,8 @@ const exportToExcel = () => { // Pass workers as a parameter
               }} /></td>
               <td><FaTrash onClick={() => {
                 axios.put(`https://localhost:7259/api/Worker/status/${worker.id}`).then(info=>{
-                  dispatch({ type: action.EDIT_WORKER, worker: info.data })//?
+                  dispatch({ type: action.EDIT_WORKER, worker: info.data });
+                  // console.log(info.data)
                 }) 
                 }} />
               </td>
